@@ -15,5 +15,6 @@ system.afterEvents.scriptEventReceive.subscribe(ev => {
     const { id, message, sourceType, sourceEntity, sourceBlock } = ev;
 
     if(id == `fg:init`) GameSystem.init();
-    if(id == `fg:join`) GameSystem.join();
+    if(id == `fg:join`) GameSystem.join(sourceEntity);
+    if(id == `fg:exit`) GameSystem.exit(sourceEntity);
 });

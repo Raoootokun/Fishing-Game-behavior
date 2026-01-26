@@ -24,7 +24,7 @@ export class GameSystem {
 
         GameSystem.setState(player, "fg_join");
 
-        player.sendMessage(``)
+        player.sendMessage(`SANNKA simasita`)
     }
 
     /**
@@ -50,8 +50,7 @@ export class GameSystem {
      * @returns {boolean | undefined}
      */
     static getState(player) {
-        //fg_join, fg_play
-        return player.getTags().find(tag => { tag.startsWith(`fg_`) })
+        return player.getTags().find(tag => tag.startsWith(`fg_`));
     };
 
     /**
@@ -61,7 +60,7 @@ export class GameSystem {
      * @param {string} state 
      */
     static setState(player, state) {
-        for(const tag of player.getTags().filter(tag => { tag.startsWith(`fg_`) })) {
+        for(const tag of player.getTags().filter(tag => tag.startsWith(`fg_`))) {
             player.removeTag(tag);
         };
 

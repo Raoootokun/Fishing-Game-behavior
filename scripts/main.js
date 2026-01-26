@@ -14,6 +14,8 @@ WorldLoad.subscribe(ev => {
         for(const player of world.getPlayers()) {
             const state = GameSystem.getState(player);
 
+            
+
             ExHud.actionbar(player, `state:${state}`);
         };
     })
