@@ -1,191 +1,351 @@
-import { system, world } from '@minecraft/server';
+//==================================================
+// v1.0.0 / 2026/01/23
+//==================================================
+import { world, system, Player, } from "@minecraft/server";
+import { log, Util } from "./Util";
+import { WorldLoad } from "./WorldLoad";
 
-export class WorldDatabase {
-    prefixBase = `WorldDatabase`;
-    static prefixBaseStatic = `WorldDatabase`;
+const WORLD_DB_FIREX = "wdb";
+const PLAYER_DB_FIREX = "pdb";
 
+export class WorldDB {
+    static #map = new Map();
+
+    #rawId;
+    #id;
+
+    /**
+     * @param {string} id 
+     */
     constructor(id) {
-        this.map = new Map();
+        this.#rawId = id;
+        this.#id = WORLD_DB_FIREX + ":" + id;
+    }
 
-        this.id = id;
-        this.prefix = `${this.prefixBase}_${this.id}`;
-
-        this.#load();
-    };
-
+    /**
+     * @param {string} key 
+     * @param {string | number | object} value 
+     */
     set(key, value) {
-        const valueCopy = this.get(key);
+        const processKey = this.#id + ":" + key;
 
-        this.map.set(key, value);
-        if(this.#save(key, value))return true;
+        const saveRes = this.#save(processKey, value);
+        if(!saveRes)return false;
 
-        this.set(key, valueCopy);
-        return false;
-    };
-
-    delete(key) {
-        this.map.delete(key);
-        this.#save(key);
-    };
-
-    get(key) {
-        const value = this.map.get(key);
-        if(value == undefined)return;
-
-        return JSON.parse(JSON.stringify(value));
-    };
-
-    clear() {
-        this.map.clear();
-        const ids = world.getDynamicPropertyIds().filter(id => { if(id.startsWith(this.prefix))return id; });
-
-        for(const id of ids) {
-           world.setDynamicProperty(id); 
-        };
-    };
-
-    keys() {
-        const keys = [];
-        for(const key of this.map.keys()) {
-            keys.push(key)
-        };
-        return keys;
-    };
-
-    values() {
-        const values = [];
-        for(const value of this.map.values()) {
-            values.push(value)
-        };
-        return values;
-    };
-
-    entries() {
-        const entries = [];
-        for(const entry of this.map.entries()) {
-            entries.push(entry)
-        };
-        return entries;
-    };
-
-    #save(key, value) {
-        const valueStr = JSON.stringify(value);
-
-        try{
-            //WorldDatabase-test-key1
-            world.setDynamicProperty(this.prefix + `_` + key, valueStr);
-        }catch(e){
-            return false;
-        };
+        WorldDB.#map.set(processKey, value);
         return true;
     };
 
-    #load() {
-        system.run(() => {
-            const ids = world.getDynamicPropertyIds().filter(id => { if(id.startsWith(this.prefix))return id; });
-
-            for(const id of ids) {
-                const key = id.replace(this.prefix+`_`, ``);
-                const valueStr = world.getDynamicProperty(id);
-                if(!valueStr)continue;
-
-                const value = JSON.parse(valueStr);
-                this.map.set(key, value);
-            };
-        });
+    /**
+     * @param {string} key 
+     * @returns {string | number | object | undefined}
+     */
+    get(key) {
+        const processKey = this.#id + ":" + key;
+        return WorldDB.#map.get(processKey);
     };
 
-    byte(key) {
-        return encodeURI(JSON.stringify(this.map.get(key))).split(/%..|./).length - 1  
+    /**
+     * @param {string} key 
+     * @returns {boolean}
+     */
+    has(key) {
+        const processKey = this.#id + ":" + key;
+        return WorldDB.#map.has(processKey);
     };
 
-    get size() {
-        return this.map.size;
+    /**
+     * @param {string} key 
+     */
+    delete(key) {
+        const processKey = this.#id + ":" + key;
+        WorldDB.#map.delete(processKey);
+
+        this.#save(processKey, undefined);
+    }
+
+    clear() {
+        const prefix = this.#id + ":";
+
+        for(const rawKey of WorldDB.#map.keys()) {
+            if(!rawKey.startsWith(prefix))continue;
+
+            const key = rawKey.replace(prefix, "");
+            this.delete(key);
+        };
+    }
+
+    /**
+     * @returns {string[]}
+     */
+    keys() {
+        const prefix = this.#id + ":";
+
+        const arr = [];
+        for(const rawKey of WorldDB.#map.keys()) {
+            if(!rawKey.startsWith(prefix))continue;
+
+            const key = rawKey.replace(prefix, "");
+            arr.push(key);
+        };
+
+        return arr;
     };
 
+    /**
+     * @returns {any[]}
+     */
+    values() {
+        const prefix = this.#id + ":";
+
+        const arr = [];
+        for(const rawKey of WorldDB.#map.keys()) {
+            if(!rawKey.startsWith(prefix))continue;
+
+            const key = rawKey.replace(prefix, "");
+            arr.push(this.get(key));
+        };
+
+        return arr;
+    }
+
+    /**
+     * @returns {{ key:string, value:any }[]}
+     */
+    entries() {
+        const prefix = this.#id + ":";
+
+        const arr = [];
+        for(const rawKey of WorldDB.#map.keys()) {
+            if(!rawKey.startsWith(prefix))continue;
+
+            const key = rawKey.replace(prefix, "");
+            arr.push({ key:key, value:this.get(key) });
+        };
+
+        return arr;
+    }
+
+    #save(processKey, value) {
+        if(value === undefined) {
+            world.setDynamicProperty(processKey);
+            return true;
+        }
+
+        try{
+            const strValue = JSON.stringify(value);
+            world.setDynamicProperty(processKey, strValue);
+
+            return true;
+        }catch(e) {
+            console.error("[WorldDB] DP save failed:", e);
+
+            return false;
+        };
+    }
+
+    static load() {
+        for(const dpKey of world.getDynamicPropertyIds().filter(id => id.startsWith(WORLD_DB_FIREX))) {
+            const strValue = world.getDynamicProperty(dpKey);
+            if(strValue == undefined)continue;
+
+            const value = JSON.parse(strValue);
+
+            WorldDB.#map.set(dpKey, value);
+        }
+    };
 };
 
-const playerMap = new Map();
-export class PlayerDatabase {
-    #prefixBase = `PlayerDatabase`;
-    static #prefixBaseStatic = `PlayerDatabase`;
+export class PlayerDB {
+    static #map = new Map();
 
+    #rawId;
+    #id;
+
+    /**
+     * @param {string} id 
+     */
     constructor(id) {
-        this.id = id;
-        this.prefix = `${this.#prefixBase}_${this.id}`;
+        this.#rawId = id;
+        this.#id = PLAYER_DB_FIREX + ":" + id;
     };
 
+    /**
+     * @param {Player} player 
+     * @param {string} key 
+     * @param {string | number | object} value 
+     * @returns {boolean}
+     */
     set(player, key, value) {
-        const _key_ = this.id + `_` + key;
-        playerMap.get(player.id)?.set(_key_, value);
-        this.#save(player, _key_, value);
+        const processKey = this.#id + ":" + player.id + ":" + key;
+
+        const saveRes = this.#save(player, processKey, value);
+        if(!saveRes)return false;
+
+        PlayerDB.#map.set(processKey, value);
+        return true;
     };
 
-    delete(player, key) {
-        playerMap.get(player.id).delete(key);
-        this.#save(player, key)
-    };
-
+    /**
+     * @param {Player} player 
+     * @param {string} key 
+     * @returns {string | number | object | undefined}
+     */
     get(player, key) {
-        const _key_ = this.id + `_` + key;
-        const _map_ = playerMap?.get(player.id);
-        if(!_map_)return; 
-        return _map_?.get(_key_);
+        const processKey = this.#id + ":" + player.id + ":" + key;
+        return PlayerDB.#map.get(processKey);
     };
 
+    /**
+     * @param {Player} player 
+     * @param {string} key 
+     * @returns {boolean}
+     */
     has(player, key) {
-        const _key_ = this.id + `_` + key;
-        const _map_ = playerMap.get(player.id);
-        if(!_map_)return; 
-        return _map_.has(_key_);
+        const processKey = this.#id + ":" + player.id + ":" + key;
+        return PlayerDB.#map.has(processKey);
     };
 
+    /**
+     * @param {Player} player 
+     * @param {string} key 
+     */
+    delete(player, key) {
+        const processKey = this.#id + ":" + player.id + ":" + key;
+        PlayerDB.#map.delete(processKey);
+
+        this.#save(player, processKey, undefined);
+    }
+
+    /**
+     * @param {Player} player 
+     */
     clear(player) {
-        playerMap.get(player.id).clear();
-        const ids = player.getDynamicPropertyIds().filter(id => { if(id.startsWith(this.prefix))return id; });
-        for(const id of ids) {
-            player.setDynamicProperty(id); 
+        const prefix = this.#id + ":" + player.id + ":";
+    
+        for(const rawKey of PlayerDB.#map.keys()) {
+            if(!rawKey.startsWith(prefix))continue;
+
+            const key = rawKey.replace(prefix, "");
+            this.delete(player, key);
         };
     };
 
-    #save(player, key, value) {
-        const valueStr = JSON.stringify(value); 
-        player.setDynamicProperty(this.#prefixBase + `_` + key, valueStr);
-    };
+    /**
+     * @param {Player} player 
+     * @returns {string[]}
+     */
+    keys(player) {
+        const prefix = this.#id + ":" + player.id + ":";
 
-    static initialSet(player) {
-        if(playerMap.has(player.id))return;
+        const arr = [];
+        for(const rawKey of PlayerDB.#map.keys()) {
+            if(!rawKey.startsWith(prefix))continue;
 
-        playerMap.set(player.id, new Map());
-        
-        //DP取得
-        const ids = player.getDynamicPropertyIds().filter(id => { if(id.startsWith(this.#prefixBaseStatic))return id; });
-        for(const id of ids){
-            const valueStr = player.getDynamicProperty(id);
-            if(!valueStr)continue;
-            
-            const key = id.replace(this.#prefixBaseStatic+`_`, ``);
-            const value = JSON.parse(valueStr);
-            playerMap.get(player.id).set(key, value); 
+            const key = rawKey.replace(prefix, "");
+            arr.push(key);
         };
+
+        return arr;
     };
-};
- 
-world.afterEvents.worldLoad.subscribe(ev => {
+
+     /**
+     * @param {Player} player 
+     * @returns {any[]}
+     */
+    values(player) {
+        const prefix = this.#id + ":" + player.id + ":";
+
+        const arr = [];
+        for(const rawKey of PlayerDB.#map.keys()) {
+            if(!rawKey.startsWith(prefix))continue;
+
+            const key = rawKey.replace(prefix, "");
+            arr.push(this.get(key));
+        };
+
+        return arr;
+    };
+
+    /**
+     * @param {Player} player 
+     * @returns {{ key:string, value:any }[]}
+     */
+    entries(player) {
+        const prefix = this.#id + ":" + player.id + ":";
+
+        const arr = [];
+        for(const rawKey of PlayerDB.#map.keys()) {
+            if(!rawKey.startsWith(prefix))continue;
+
+            const key = rawKey.replace(prefix, "");
+            arr.push({ key:key, value:this.get(key) });
+        };
+
+        return arr;
+    }
+
+    #save(player, processKey, value) {
+        if(value === undefined) {
+            player.setDynamicProperty(processKey);
+            return true;
+        }
+
+        try{
+            const strValue = JSON.stringify(value);
+            player.setDynamicProperty(processKey, strValue);
+
+            return true;
+        }catch(e) {
+            console.error("[PlayerDB] DP save failed:", e);
+
+            return false;
+        };
+    }
+
+    static load(player) {
+        for(const dpKey of player.getDynamicPropertyIds().filter(id => id.startsWith(PLAYER_DB_FIREX))) {
+            const strValue = player.getDynamicProperty(dpKey);
+            if(strValue == undefined)continue;
+
+            const value = JSON.parse(strValue);
+
+            PlayerDB.#map.set(dpKey, value);
+        }
+    };
+
+    static destroy(player) {
+        for(const dpKey of player.getDynamicPropertyIds().filter(id => id.startsWith(PLAYER_DB_FIREX))) {
+            const strValue = world.getDynamicProperty(dpKey);
+            if(strValue == undefined)continue;
+
+            const value = JSON.parse(strValue);
+
+            PlayerDB.#map.delete(dpKey);
+        }
+    };
+}
+
+//ワールドロード時に実行
+WorldLoad.subscribe(ev => {
+    WorldDB.load();
+
     for(const player of world.getPlayers()) {
-        PlayerDatabase.initialSet(player);
-    };
+        PlayerDB.load(player);
+    }
 });
 
+//ワールド参加に実行
 world.afterEvents.playerSpawn.subscribe(ev => {
     const { player, initialSpawn } = ev;
+
     if(!initialSpawn)return;
+    PlayerDB.load(player);
+})
 
-    PlayerDatabase.initialSet(player);
-});
+//ワールド退出時に実行
+world.beforeEvents.playerLeave.subscribe(ev => {
+    const { player } = ev;
 
-world.afterEvents.playerLeave.subscribe(ev => {
-    const { playerId } = ev;
-
-    playerMap.delete(playerId);
+    PlayerDB.destroy(player);
 });

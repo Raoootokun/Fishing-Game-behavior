@@ -1,12 +1,16 @@
+# 釣り大会 仕様書
+------------------------------------------------------------------------------------------
 
 
+## 管理 
+------------------------------------------------------------------------------------------
+### スコアボード
+- fg_point ... ポイント管理
 
-/actionbar <selector> <text> <stayDuration>
+### タグ
+- fg_join - 参加中
+- fg_play - プレイ中
+- [No Tags] - 日参加
 
-/sidebar.setref <selector> <objectiveId> <baseText> - 既存のオブジェクトのスコアをもとにセットする
-/sidebar.remove <selector> <objectiveId> <text> - スコアを削除する
-/sidebar.removeAll <selector> <objectiveId> - スコアをすべて削除する
-/sidebar.set <selector> <objectiveId> <text> <score> - 
-/sidebar.show <selector> <objectiveId>
-
-
+上のいずれかのタグが一つついている。それで状態を判別
+------------------------------------------------------------------------------------------

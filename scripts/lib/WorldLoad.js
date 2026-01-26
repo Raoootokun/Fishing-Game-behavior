@@ -1,4 +1,17 @@
+//==================================================
+// v1.0.0 / 2026/01/23
+//==================================================
+
 import { world, system, } from "@minecraft/server";
+import { getTime } from "./Util";
+
+/**
+ * @callback ReloadLog
+ * @param {string} name
+ * @param {any[]} version
+ * @returns {void}
+ */
+
 
 const loadStartTick = system.currentTick;
 
@@ -7,14 +20,14 @@ const worldLoadCallbacks = new Set();
 
 export class WorldLoad {
     /**
-     * コールバックを登録する（静的メソッド）
-     * @param {( data:{ loadStartTick: number, loadTick: number }) => void} callback - ワールドロード時に呼ばれる関数
+     * イベント登録
+     * @param {( data:{ loadStartTick: number, loadTick: number, reloadLog:ReloadLog  }) => void} callback - ワールドロード時に呼ばれる関数
      */
     static subscribe(callback) {
         worldLoadCallbacks.add(callback);
     }
 
-    // コールバックを解除する（静的メソッド）
+    // イベント解除
     static unsubscribe(callback) {
         worldLoadCallbacks.delete(callback);
     }
@@ -32,7 +45,8 @@ const systemNum = system.runInterval(() => {
             try {
                 cb({ 
                     loadStartTick: loadStartTick,
-                    loadTick: system.currentTick 
+                    loadTick: system.currentTick,
+                    reloadLog: reloadLog,
                 });
             } catch (e) {
                 // 個別コールバックの例外が全体に影響しないように保護
@@ -41,3 +55,12 @@ const systemNum = system.runInterval(() => {
         }
     }
 });
+
+
+/**
+ * @param {string} name 
+ * @param {any[]} version 
+ */
+function reloadLog(name, version) {
+    world.sendMessage(`§a[${getTime()}]§f[${name} v${version.join(".")}§r] Reload`);
+}

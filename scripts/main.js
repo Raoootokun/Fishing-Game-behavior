@@ -1,10 +1,18 @@
-
 import { world, system, Player, } from "@minecraft/server";
-import { WorldLoad } from "./lib/WorldLoad" 
-import "./ExHud/ExHud";
+import { WorldLoad } from "./lib/WorldLoad"
 
-world.sendMessage("reload!");
+import "./events";
 
-WorldLoad.subscribe(() => {
-    
-})
+const VERSION = [ 0, 1, 0 ];
+WorldLoad.subscribe(ev => {
+    ev.reloadLog("§b釣り大会", VERSION);
+
+    system.runInterval(() => {
+
+        for(const player of world.getPlayers()) {
+            
+        };
+    })
+});
+
+

@@ -1,3 +1,6 @@
+//==================================================
+// v1.0.0 / 2026/01/23
+//==================================================
 import { EffectTypes, ItemStack, Player, system, world } from "@minecraft/server";
 import { Vector } from "./Vector";
 /**
@@ -72,6 +75,24 @@ export function getSpeed(player) {
 
     return Vector.distance({x:0,y:0,z:0}, velo)*20
 };
+
+/**
+ * 現在時刻を取得
+ * "hh:mm:ss"
+ * @returns {string}
+ */
+export function getTime() {
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const tokyo = new Date(utc + (9 * 60 * 60 * 1000));
+
+    const hh = String(tokyo.getHours()).padStart(2, "0");
+    const mm = String(tokyo.getMinutes()).padStart(2, "0");
+    const ss = String(tokyo.getSeconds()).padStart(2, "0");
+
+
+    return `${hh}:${mm}:${ss}`;
+}
 
 
 /**
