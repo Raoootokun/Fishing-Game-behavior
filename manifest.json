@@ -1,9 +1,9 @@
 {
   "format_version": 2,
   "header": {
-    "name": "釣り大会 [ver1.0.0]",
+    "name": "釣り大会 [ver0.1.0]",
     "description": "",
-    "version": [ 1, 0, 0 ],
+    "version": [ 0, 1, 0 ],
     "uuid": "e6d1123d-e6d0-0bf0-130b-5c07b7700e19",
     "min_engine_version": [ 1, 21, 120 ]
   },
@@ -20,12 +20,10 @@
   "dependencies": [
     {
       "module_name": "@minecraft/server",
-      // "version": "1.14.0"
       "version": "2.5.0-beta"
     },
     {
       "module_name": "@minecraft/server-ui",
-      // "version": "1.3.0"
       "version": "2.0.0"
     },
     {

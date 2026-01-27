@@ -41,22 +41,28 @@ export class Item {
     /**
      * 釣り竿を回収
      * @param {Player} player 
-     * @param {number} interval 
+     * @param {ItemStack} findItemStack 
      */
-    static clearFish(player, interval) {
+    static clearFish(player, findItemStack) {
+        let interval = 60;
+        
         const container = player.getComponent(`inventory`).container;
         const systemNum = system.runInterval(() => {
-            if(interval <= 0)return system.clearRun(systemNum);
+            if(60 <= 0)return system.clearRun(systemNum);
 
             for(let i=0; i<container.size; i++) {
                 const itemStack = container.getItem(i);
                 if(!itemStack)continue;
 
-                const isFgItem = itemStack.getLore().find(txt => txt == `fg_item`);
-                if(isFgItem) {
+                if(findItemStack.typeId == itemStack.typeId) {
                     container.setItem(i);
                     return system.clearRun(systemNum);
-                }
+                };
+                // const isFgItem = itemStack.getLore().find(txt => txt == `fg_item`);
+                // if(isFgItem) {
+                //     container.setItem(i);
+                //     return system.clearRun(systemNum);
+                // }
             };
 
             interval -= 20;

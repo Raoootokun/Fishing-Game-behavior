@@ -136,7 +136,7 @@ export class GameSystem {
 
         const fishId = itemStack.typeId;
         //連れたアイテムを削除
-        Item.clearFish(player, 20*3);
+        Item.clearFish(player, itemStack);
 
         //スコアを追加
         const score = Score.add(player, fishId);
