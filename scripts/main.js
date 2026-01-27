@@ -16,7 +16,6 @@ WorldLoad.subscribe(ev => {
     ev.reloadLog("§b釣り大会", VERSION);
 
     system.runInterval(() => { 
-
         for(const player of world.getPlayers()) {
             const state = GameSystem.getState(player);
 

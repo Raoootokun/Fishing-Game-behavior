@@ -12,7 +12,8 @@ export class GameSystem {
      */
     static loop(player) { 
         if(player.time <= 0) {
-            
+            GameSystem.finish(player);
+            return;
         }
 
         player.time--;
@@ -106,7 +107,13 @@ export class GameSystem {
         player.sendMessage(`§c釣り大会開始!!`);
     }
 
-    static fishing(player, itemStack, itemEntity) {
+    /**
+     * アイテムを釣ったときに実行
+     * ポイント付与、アイテム削除
+     * @param {Player} player 
+     * @param {ItemStack} itemStack  
+     */
+    static fishing(player, itemStack) {
         const nowState = GameSystem.getState(player);
         if(nowState != `fg_play`)return;
 
@@ -121,6 +128,26 @@ export class GameSystem {
         for(const other of GameSystem.getPlayers()) {
             other.sendMessage(`${player.name}は§b${itemStack.nameTag}§fを釣り上げた。(+${score})`);
         }
+    }
+
+    /**
+     * ゲーム終了時に処理
+     * stateを fg_join に変更
+     * タイトル、ポイント表示
+     * @param {Player} player 
+     */
+    static finish(player) {
+        Item.clearFishingRod(player);
+        GameSystem.setState(player, "fg_join");
+        delete player.time;
+
+        const score = Score.get(player);
+
+        player.onScreenDisplay.setTitle(`釣り大会`, {
+            fadeInDuration:0, stayDuration:60, fadeOutDuration:20,
+            subtitle: `終了`
+        });
+        player.sendMessage(`- 得点: §b${score} 点§f -`);
     }
 
 
@@ -155,10 +182,10 @@ export class GameSystem {
     };
 
     /**
-     * 状態が fg_join, fg_play のプレイヤーを取得します
+     * 状態が fg_play のプレイヤーを取得します
      */
     static getPlayers() {
-        return world.getPlayers().filter(player => GameSystem.getState(player));
+        return world.getPlayers().filter(player => GameSystem.getState(player) == `fg_play` );
     }
 }
 
