@@ -40,5 +40,10 @@ WorldLoad.subscribe(ev => {
 
             
         };
-    })
-}, 20);
+    }, 20);
+
+    //Reload時の処理
+    for(const player of world.getPlayers()) {
+        GameSystem.check(player);
+    }
+});

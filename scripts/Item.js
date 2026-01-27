@@ -52,7 +52,7 @@ export class Item {
                 const itemStack = container.getItem(i);
                 if(!itemStack)continue;
 
-                const isFgItem = itemStack.getLore().find(txt => txt == `is_fg_item`);
+                const isFgItem = itemStack.getLore().find(txt => txt == `fg_item`);
                 if(isFgItem) {
                     container.setItem(i);
                     return system.clearRun(systemNum);

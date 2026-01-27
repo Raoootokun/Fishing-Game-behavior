@@ -16,6 +16,21 @@ export class GameSystem {
             return;
         }
 
+        if(player.time == 60) {
+            player.onScreenDisplay.setTitle(`§1`, {
+                fadeInDuration:0, stayDuration:60, fadeOutDuration:20,
+                subtitle: `残り 1分 です`
+            });
+            player.playSound(`random.click`)
+        };
+        if(player.time == 30) {
+            player.onScreenDisplay.setTitle(`§1`, {
+                fadeInDuration:0, stayDuration:60, fadeOutDuration:20,
+                subtitle: `残り 30秒 です`
+            });
+            player.playSound(`random.click`)
+        }
+
         player.time--;
     }
 
@@ -24,8 +39,6 @@ export class GameSystem {
      * スコア表を作成
      */
     static init() {
-        GameSystem.players = {};
-
         try{
             world.scoreboard.removeObjective(`fg_point`);
         }catch(e){};
@@ -36,14 +49,14 @@ export class GameSystem {
             'minecraft:tropical_fish': 25,
             'minecraft:pufferfish': 30,
         });
-        worldDB.set(`time`, 500);
+        worldDB.set(`time`, 300);
          
         world.scoreboard.addObjective(`fg_point`);
         world.sendMessage(`[釣り大会] オブジェクト/ポイントを初期化しました`);
     };
 
     /**
-     * fg_join付与、得点初期化、案内表示
+     * fg_join付与、案内表示
      * @param {Player} player 
      */
     static join(player) {
@@ -55,7 +68,6 @@ export class GameSystem {
         };
 
         GameSystem.setState(player, "fg_join");
-        Score.init(player);
 
         player.sendMessage(`釣り大会に参加しました。\n開始ボタンを押したらゲームが開始されます。`);
     }
@@ -74,7 +86,7 @@ export class GameSystem {
     }
 
     /**
-     * fg_play付与, 釣り竿付与
+     * fg_play付与, 釣り竿付与、スコア初期化
      * @param {Player} player 
      */
     static play(player) {
@@ -98,12 +110,17 @@ export class GameSystem {
             return;
         }
 
+        Score.init(player);
+
         //残り時間を設定
         player.time = worldDB.get(`time`);
-
-        GameSystem.players[player.id] = player;
         GameSystem.setState(player, "fg_play");
 
+        player.onScreenDisplay.setTitle(`釣り大会`, {
+            fadeInDuration:0, stayDuration:60, fadeOutDuration:20,
+            subtitle: `§c開始`
+        });
+        player.playSound(`random.levelup`, { pitch:0.8 });
         player.sendMessage(`§c釣り大会開始!!`);
     }
 
@@ -147,10 +164,21 @@ export class GameSystem {
             fadeInDuration:0, stayDuration:60, fadeOutDuration:20,
             subtitle: `終了`
         });
+        player.playSound(`random.levelup`, { pitch:0.8 });
         player.sendMessage(`- 得点: §b${score} 点§f -`);
     }
 
+    /**
+     * ワールド参加時、リスポーン時に実行
+     * fg_join, fg_playがついている場合、退出処理を実行
+     * @param {Player} player 
+     */
+    static check(player) {
+        const hasTag = player.hasTag(`fg_join`) || player.hasTag(`fg_play`);
+        if(!hasTag)return;
 
+        GameSystem.exit(player);
+    }
 
     /**
      * プレイヤーの状態を取得   
