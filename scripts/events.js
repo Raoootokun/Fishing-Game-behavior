@@ -6,8 +6,8 @@ import { GameSystem } from "./GameSystem";
 playerFishingAfterEvent.subscribe(ev => {
     const { player, itemStack, itemEntity, result } = ev;
 
-    log(itemEntity);
-    log(result);
+    if(!result)return;
+    GameSystem.fishing(player, itemStack, itemEntity);
 });
 
 
@@ -16,5 +16,6 @@ system.afterEvents.scriptEventReceive.subscribe(ev => {
 
     if(id == `fg:init`) GameSystem.init();
     if(id == `fg:join`) GameSystem.join(sourceEntity);
+    if(id == `fg:play`) GameSystem.play(sourceEntity);
     if(id == `fg:exit`) GameSystem.exit(sourceEntity);
 });

@@ -1,9 +1,15 @@
-import { world, system, Player, } from "@minecraft/server";
+import { world, system, } from "@minecraft/server";
 import { WorldLoad } from "./lib/WorldLoad"
+import { log } from "./lib/Util";
+import { WorldDB, PlayerDB } from "./lib/Database";
 import { ExHud } from "./ExHud";
 
 import "./events";
 import { GameSystem } from "./GameSystem";
+import { Score } from "./Score";
+
+export const worldDB = new WorldDB(`fg`);
+export const playerDB = new PlayerDB(`fg`);
 
 const VERSION = [ 0, 1, 0 ];
 WorldLoad.subscribe(ev => {
@@ -16,9 +22,27 @@ WorldLoad.subscribe(ev => {
 
             
 
-            ExHud.actionbar(player, `state:${state}`);
+            
+
+            if(state) {
+                ExHud.sidebarShow(player, `fg_point`);
+                ExHud.sidebarRefSetAll(player, `fg_point`);
+
+                if(state == `fg_join`) {
+                    ExHud.sidebarDisplay(player, `fg_point`, `釣り結果`);
+                };
+
+                if(state == `fg_play`) {
+                    ExHud.sidebarDisplay(player, `fg_point`, `釣り中`);
+                    ExHud.actionbar(player, `残り時間:§bnull§f秒  現在の得点:§c${Score.get(player)}§f`, 1);
+                };
+
+            }else {
+                ExHud.sidebarShow(player);
+            }
+            
+
+            
         };
     })
 });
-
-

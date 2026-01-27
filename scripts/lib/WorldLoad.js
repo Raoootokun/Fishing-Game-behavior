@@ -21,7 +21,7 @@ const worldLoadCallbacks = new Set();
 export class WorldLoad {
     /**
      * イベント登録
-     * @param {( data:{ loadStartTick: number, loadTick: number, reloadLog:ReloadLog  }) => void} callback - ワールドロード時に呼ばれる関数
+     * @param {( data:{ loadStartTick: number, loadTick: number, isReload:boolean reloadLog:ReloadLog  }) => void} callback - ワールドロード時に呼ばれる関数
      */
     static subscribe(callback) {
         worldLoadCallbacks.add(callback);
@@ -46,6 +46,7 @@ const systemNum = system.runInterval(() => {
                 cb({ 
                     loadStartTick: loadStartTick,
                     loadTick: system.currentTick,
+                    isReload: system.currentTick - loadStartTick == 0,
                     reloadLog: reloadLog,
                 });
             } catch (e) {

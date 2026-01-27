@@ -9,9 +9,10 @@ export class ExHud {
     /**
      * @param {Player} player 
      * @param {string} text 
+     * @param {number} stayDuration 
      */
-    static actionbar(player, text) {
-        player.runCommand(`eh:actionbar @s "${text}"`);
+    static actionbar(player, text, stayDuration = 60) {
+        player.runCommand(`eh:actionbar @s "${text}" ${stayDuration}`);
     }
 
     /**
