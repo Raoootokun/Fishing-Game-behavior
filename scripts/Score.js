@@ -12,9 +12,9 @@ export class Score {
      * @param {string} fishId 
      */
     static getScoreFromFish(fishId) {
-        const scoreDatas = worldDB.get(`scoreDatas`);
+        const scores = worldDB.get(`scores`);
 
-        return scoreDatas[fishId] ?? 0;
+        return scores[fishId] ?? 0;
     };
 
 

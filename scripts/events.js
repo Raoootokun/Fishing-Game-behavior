@@ -19,3 +19,10 @@ system.afterEvents.scriptEventReceive.subscribe(ev => {
     if(id == `fg:play`) GameSystem.play(sourceEntity);
     if(id == `fg:exit`) GameSystem.exit(sourceEntity);
 });
+
+
+world.afterEvents.playerSpawn.subscribe(ev => {
+    const { player, initialSpawn } = ev;
+
+    GameSystem.exit(player);
+})

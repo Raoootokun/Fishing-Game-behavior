@@ -15,14 +15,10 @@ const VERSION = [ 0, 1, 0 ];
 WorldLoad.subscribe(ev => {
     ev.reloadLog("§b釣り大会", VERSION);
 
-    system.runInterval(() => {
+    system.runInterval(() => { 
 
         for(const player of world.getPlayers()) {
             const state = GameSystem.getState(player);
-
-            
-
-            
 
             if(state) {
                 ExHud.sidebarShow(player, `fg_point`);
@@ -34,9 +30,10 @@ WorldLoad.subscribe(ev => {
 
                 if(state == `fg_play`) {
                     ExHud.sidebarDisplay(player, `fg_point`, `釣り中`);
-                    ExHud.actionbar(player, `残り時間:§bnull§f秒  現在の得点:§c${Score.get(player)}§f`, 1);
-                };
+                    ExHud.actionbar(player, `残り時間:§b${player.time}§f秒  現在の得点:§c${Score.get(player)}§f`, 20);
 
+                    GameSystem.loop(player);
+                };
             }else {
                 ExHud.sidebarShow(player);
             }
@@ -45,4 +42,4 @@ WorldLoad.subscribe(ev => {
             
         };
     })
-});
+}, 20);

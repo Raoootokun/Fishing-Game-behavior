@@ -3,26 +3,42 @@ import { log, Util } from "./lib/Util";
 import { Score } from "./Score";
 import { Item } from "./Item";
 import { worldDB } from "./main";
+import { ExHud } from "./ExHud";
 
 export class GameSystem {
+    /**
+     * 一秒毎に実行
+     * @param {Player} player 
+     */
+    static loop(player) { 
+        if(player.time <= 0) {
+            
+        }
+
+        player.time--;
+    }
+
     /**
      * objective の作成 & 初期化
      * スコア表を作成
      */
     static init() {
+        GameSystem.players = {};
+
         try{
             world.scoreboard.removeObjective(`fg_point`);
         }catch(e){};
 
-        worldDB.set(`scoreDatas`, {
+        worldDB.set(`scores`, {
             'minecraft:cod': 10,
             'minecraft:salmon': 15,
             'minecraft:tropical_fish': 25,
             'minecraft:pufferfish': 30,
         });
+        worldDB.set(`time`, 500);
          
         world.scoreboard.addObjective(`fg_point`);
-        world.sendMessage(`[釣り大会] 初期化しました`);
+        world.sendMessage(`[釣り大会] オブジェクト/ポイントを初期化しました`);
     };
 
     /**
@@ -35,7 +51,7 @@ export class GameSystem {
             player.sendMessage(`§4現在、ゲームをプレイ中です。`);
             player.playSound(`note.bass`);
             return;
-        }
+        };
 
         GameSystem.setState(player, "fg_join");
         Score.init(player);
@@ -50,7 +66,8 @@ export class GameSystem {
     static exit(player) {
         GameSystem.setState(player, undefined);
         Item.clearFishingRod(player);
-
+        delete player.time;
+        
         player.sendMessage(`釣りゲームを退出しました。\n再びゲームを開始するまでスコアはリセットされません。`);
         player.playSound(`random.orb`);
     }
@@ -80,6 +97,10 @@ export class GameSystem {
             return;
         }
 
+        //残り時間を設定
+        player.time = worldDB.get(`time`);
+
+        GameSystem.players[player.id] = player;
         GameSystem.setState(player, "fg_play");
 
         player.sendMessage(`§c釣り大会開始!!`);
@@ -104,29 +125,33 @@ export class GameSystem {
 
 
 
-
     /**
      * プレイヤーの状態を取得   
      * fg_join, fg_play, undefined
      * @param {Player} player 
-     * @returns {boolean | undefined}
+     * @returns {string | undefined}
      */
     static getState(player) {
-        return player.getTags().find(tag => tag.startsWith(`fg_`));
+        return player.state;
     };
 
     /**
      * プレイヤーの状態を設定
      * fg_join, fg_play, undefined
      * @param {Player} player 
-     * @param {string} state 
+     * @param {string | undefined} state 
      */
     static setState(player, state) {
         for(const tag of player.getTags().filter(tag => tag.startsWith(`fg_`))) {
             player.removeTag(tag);
         };
 
-        if(state)player.addTag(state);
+        if(state) {
+            player.state = state;
+            player.addTag(state);
+        }else {
+            delete player.state;
+        }
     };
 
     /**
