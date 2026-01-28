@@ -2,7 +2,7 @@ import { world, system, Player, ItemStack, EnchantmentType, } from "@minecraft/s
 import { log, Util } from "./lib/Util";
 
 export class Item {
-    static get() {
+    static getFishingRod() {
         const itemStack = new ItemStack(`minecraft:fishing_rod`);
         itemStack.lockMode = `inventory`;
 
@@ -18,11 +18,21 @@ export class Item {
      * @param {Player} player 
      */
     static add(player) {
-        const res = player.getComponent(`inventory`).container.addItem(Item.get());
+        const res = player.getComponent(`inventory`).container.addItem(Item.getFishingRod());
 
         if(res)return false;
         else return true;
     };
+
+    static repairFishingRod(player) {
+        const container = player.getComponent(`inventory`).container;
+        for(let i=0; i<container.size; i++) {
+            const itemStack = container.getItem(i);
+            if(itemStack?.typeId != `minecraft:fishing_rod`)continue;
+
+            container.setItem(i, Item.getFishingRod());
+        }
+    }
 
     /**
      * 釣り竿を回収

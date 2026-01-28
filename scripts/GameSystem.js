@@ -138,6 +138,9 @@ export class GameSystem {
         //連れたアイテムを削除
         Item.clearFish(player, itemStack);
 
+        //釣り竿を新しくする
+        Item.repairFishingRod(player);
+
         //スコアを追加
         const score = Score.add(player, fishId);
         if(!score)return;
